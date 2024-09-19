@@ -26,7 +26,8 @@ public class GameManager : MonoBehaviour
     private bool isEndGame;
 
     public event Action<bool> OnEndTurnEvent;
-    public event Action<bool> OnEndGameEvent;
+    public event Action<bool> OnEndGameWithWinnerEvent;
+    public event Action OnEndGameWithDrawEvent;
 
     private void Start()
     {
@@ -44,7 +45,7 @@ public class GameManager : MonoBehaviour
         {
             if (isPlayerTurn)
             {
-                if (Input.GetMouseButtonDown(0) && CanMove())
+                if (Input.GetMouseButtonDown(0) && CanMove(selectionX, selectionY))
                 {
                     MakeMove(selectionX, selectionY);
                 }
@@ -115,30 +116,28 @@ public class GameManager : MonoBehaviour
         lineRenderer.SetPositions(slicedPositions);
     }
 
-    private bool CanMove()
+    private bool CanMove(int selectionX, int selectionY)
     {
-        // check move
+        // drawed ball line restrictions
         for (int i = 0; i < positionsIndex; i++)
         {
-            if (positions[i].x == ballX && positions[i].y == ballY) // if there was move
+            if (positions[i].x == ballX && positions[i].y == ballY) // if there was selection
             {
-                if (positions[i + 1].x == selectionX && positions[i + 1].y == selectionY) // check next move
+                // selection is on already drawed move
+                if (positions[i + 1].x == selectionX && positions[i + 1].y == selectionY)
                 {
                     return false;
                 }
                 if (i > 0)
                 {
-                    if (positions[i - 1].x == selectionX && positions[i - 1].y == selectionY) // check next move
+                    // selection is on previous move
+                    if (positions[i - 1].x == selectionX && positions[i - 1].y == selectionY)
                     {
                         return false;
                     }
                 }
-
             }
         }
-
-        Debug.Log("ballX: " + ballX + " ballY: " + ballY);
-        Debug.Log("selectionX: " + selectionX + " selectionY: " + selectionY);
 
         // same point restriction
         if (selectionX == ballX && selectionY == ballY)
@@ -158,31 +157,31 @@ public class GameManager : MonoBehaviour
             return false;
         }
 
-        // field left restriction
+        // field left band restriction
         else if (ballX == -4 && selectionX == -4 && (ballY != selectionY))
         {
             return false;
         }
 
-        // field right restriction
+        // field right band restriction
         else if (ballX == 4 && selectionX == 4 && (ballY != selectionY))
         {
             return false;
         }
 
-        // field horizontal selection restriction
+        // field horizontal band restriction
         else if (selectionX < -4 || selectionX > 4)
         {
             return false;
         }
 
-        // field bottom restriction
+        // field bottom band restriction
         else if (ballX != 0 && ballY == -5 && selectionY <= -5 && (selectionX >= 1 || selectionX <= -1))
         {
             return false;
         }
 
-        // field top restriction
+        // field top band restriction
         else if (ballX != 0 && ballY == 5 && selectionY >= 5 && (selectionX >= 1 || selectionX <= -1))
         {
             return false;
@@ -205,12 +204,12 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        if (ballX == -4 || ballX == 4) // check left / right bump
+        if (ballX == -4 || ballX == 4) // check left / right band
         {
             return true;
         }
 
-        if (ballY == -5 || ballY == 5) // check up / down bump
+        if (ballY == -5 || ballY == 5) // check up / down band
         {
             if (ballX != 0)
             {
@@ -260,6 +259,80 @@ public class GameManager : MonoBehaviour
         {
             EndTurn();
         }
+        else
+        {
+            var tempSelectionX = ballX + 1;
+            var tempSelectionY = ballY;
+
+            bool tempCanMove = false;
+
+            if (CanMove(tempSelectionX, tempSelectionY))
+            {
+                tempCanMove = true;
+            }
+
+            tempSelectionX = ballX - 1;
+            tempSelectionY = ballY;
+
+            if (CanMove(tempSelectionX, tempSelectionY))
+            {
+                tempCanMove = true;
+            }
+
+            tempSelectionX = ballX;
+            tempSelectionY = ballY + 1;
+
+            if (CanMove(tempSelectionX, tempSelectionY))
+            {
+                tempCanMove = true;
+            }
+
+            tempSelectionX = ballX;
+            tempSelectionY = ballY - 1;
+
+            if (CanMove(tempSelectionX, tempSelectionY))
+            {
+                tempCanMove = true;
+            }
+
+            tempSelectionX = ballX + 1;
+            tempSelectionY = ballY + 1;
+
+            if (CanMove(tempSelectionX, tempSelectionY))
+            {
+                tempCanMove = true;
+            }
+
+            tempSelectionX = ballX + 1;
+            tempSelectionY = ballY - 1;
+
+            if (CanMove(tempSelectionX, tempSelectionY))
+            {
+                tempCanMove = true;
+            }
+
+            tempSelectionX = ballX - 1;
+            tempSelectionY = ballY - 1;
+
+            if (CanMove(tempSelectionX, tempSelectionY))
+            {
+                tempCanMove = true;
+            }
+
+            tempSelectionX = ballX - 1;
+            tempSelectionY = ballY + 1;
+
+            if (CanMove(tempSelectionX, tempSelectionY))
+            {
+                tempCanMove = true;
+            }
+
+            if (!tempCanMove)
+            {
+                OnEndGameWithDrawEvent?.Invoke();
+            }
+        }
+
 
         ballTransform.position = new Vector3(ballX, ballY, 1.0f);
     }
@@ -271,7 +344,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX + 1;
             selectionY = ballY + 1;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -280,7 +353,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX;
             selectionY = ballY + 1;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -289,7 +362,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX - 1;
             selectionY = ballY + 1;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -298,7 +371,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX - 1;
             selectionY = ballY;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -307,7 +380,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX + 1;
             selectionY = ballY;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -316,7 +389,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX + 1;
             selectionY = ballY - 1;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -325,7 +398,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX - 1;
             selectionY = ballY - 1;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -334,7 +407,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX;
             selectionY = ballY - 1;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -345,7 +418,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX - 1;
             selectionY = ballY + 1;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -354,7 +427,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX;
             selectionY = ballY + 1;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -363,7 +436,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX;
             selectionY = ballY + 1;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -372,7 +445,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX - 1;
             selectionY = ballY;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -381,7 +454,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX + 1;
             selectionY = ballY;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -390,7 +463,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX + 1;
             selectionY = ballY - 1;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -399,7 +472,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX;
             selectionY = ballY - 1;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -408,7 +481,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX - 1;
             selectionY = ballY - 1;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -419,7 +492,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX;
             selectionY = ballY + 1;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -428,7 +501,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX + 1;
             selectionY = ballY + 1;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -437,7 +510,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX - 1;
             selectionY = ballY + 1;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -446,7 +519,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX - 1;
             selectionY = ballY;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -455,7 +528,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX + 1;
             selectionY = ballY;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -464,7 +537,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX + 1;
             selectionY = ballY - 1;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -473,7 +546,7 @@ public class GameManager : MonoBehaviour
             selectionX = ballX;
             selectionY = ballY - 1;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
@@ -482,14 +555,13 @@ public class GameManager : MonoBehaviour
             selectionX = ballX - 1;
             selectionY = ballY - 1;
 
-            if (CanMove())
+            if (CanMove(selectionX, selectionY))
             {
                 MakeMove(selectionX, selectionY);
                 return;
             }
         }
     }
-
 
     private void EndTurn()
     {
@@ -498,11 +570,17 @@ public class GameManager : MonoBehaviour
         OnEndTurnEvent?.Invoke(isPlayerTurn);
     }
 
-    private void EndGame(bool isPlayerWins)
+    private void EndGame(bool isPlayerWins, bool isDraw = false)
     {
         isEndGame = true;
 
-        OnEndGameEvent?.Invoke(isPlayerWins);
+        if (!isDraw)
+        {
+            OnEndGameWithWinnerEvent?.Invoke(isPlayerWins);
+        }
+        else
+        {
+            OnEndGameWithDrawEvent?.Invoke();
+        }
     }
-
 }

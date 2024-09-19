@@ -18,7 +18,8 @@ public class UIView : MonoBehaviour
         RestartGame();
 
         gameManager.OnEndTurnEvent += EndTurn;
-        gameManager.OnEndGameEvent += EndGame;
+        gameManager.OnEndGameWithWinnerEvent += EndGameWithWinner;
+        gameManager.OnEndGameWithDrawEvent += EndGameWithDraw;
 
         playAgainButton.onClick.AddListener(RestartGame);
         playerWinButton.onClick.AddListener(WinGame);
@@ -28,7 +29,8 @@ public class UIView : MonoBehaviour
     private void OnDestroy()
     {
         gameManager.OnEndTurnEvent -= EndTurn;
-        gameManager.OnEndGameEvent -= EndGame;
+        gameManager.OnEndGameWithWinnerEvent -= EndGameWithWinner;
+        gameManager.OnEndGameWithDrawEvent -= EndGameWithDraw;
 
         playAgainButton.onClick.RemoveListener(RestartGame);
         playerWinButton.onClick.RemoveListener(WinGame);
@@ -52,7 +54,7 @@ public class UIView : MonoBehaviour
         }
     }
 
-    private void EndGame(bool isPlayerWins)
+    private void EndGameWithWinner(bool isPlayerWins)
     {
         winnerText.gameObject.SetActive(true);
 
@@ -68,21 +70,28 @@ public class UIView : MonoBehaviour
         }
     }
 
+    private void EndGameWithDraw()
+    {
+        winnerText.gameObject.SetActive(true);
+        winnerText.text = "Draw!";
+    }
+
     private void RestartGame()
     {
         gameManager.RestartGame();
+        winnerText.text = string.Empty;
         winnerText.gameObject.SetActive(false);
     }
 
     private void WinGame()
     {
-        EndGame(true);
+        EndGameWithWinner(true);
         RestartGame();
     }
 
     private void LoseGame()
     {
-        EndGame(false);
+        EndGameWithWinner(false);
         RestartGame();
     }
 }

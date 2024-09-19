@@ -21,6 +21,8 @@ public class UIView : MonoBehaviour
     [SerializeField] private Button playerWinButton;
     [SerializeField] private Button playerLoseButton;
 
+    [SerializeField] private Slider fieldSizeSlider;
+
     private void Start()
     {
         RestartGame();
@@ -32,6 +34,8 @@ public class UIView : MonoBehaviour
         playAgainButton.onClick.AddListener(RestartGame);
         playerWinButton.onClick.AddListener(WinGame);
         playerLoseButton.onClick.AddListener(LoseGame);
+
+        fieldSizeSlider.onValueChanged.AddListener(ChangeFieldSize);
     }
 
     private void OnDestroy()
@@ -43,7 +47,11 @@ public class UIView : MonoBehaviour
         playAgainButton.onClick.RemoveListener(RestartGame);
         playerWinButton.onClick.RemoveListener(WinGame);
         playerLoseButton.onClick.RemoveListener(LoseGame);
+
+        fieldSizeSlider.onValueChanged.RemoveListener(ChangeFieldSize);
+
     }
+
 
     private void Update()
     {
@@ -101,5 +109,10 @@ public class UIView : MonoBehaviour
     {
         EndGameWithWinner(false);
         RestartGame();
+    }
+
+    private void ChangeFieldSize(float value)
+    {
+        Camera.main.orthographicSize = 14 - value * 7;
     }
 }

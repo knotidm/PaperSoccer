@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
-using System;
 
-public class GameManager : MonoBehaviour
+public class GameController : MonoBehaviour
 {
+    [SerializeField] private GameManager gameManager;
+
     [SerializeField] private Transform ballTransform;
 
     [SerializeField] private LineRenderer playerLineRendererPrefab;
@@ -22,28 +23,19 @@ public class GameManager : MonoBehaviour
     private int selectionX;
     private int selectionY;
 
-    private bool isPlayerTurn;
-    private bool isEndGame;
-
-    public event Action<bool> OnEndTurnEvent;
-    public event Action<bool> OnEndGameWithWinnerEvent;
-    public event Action OnEndGameWithDrawEvent;
-
     private void Start()
     {
         playerLineRenderers = new List<LineRenderer>();
         aiLineRenderers = new List<LineRenderer>();
-
-        RestartGame();
     }
 
     private void Update()
     {
         UpdateSelection();
 
-        if (!isEndGame)
+        if (!gameManager.isEndGame)
         {
-            if (isPlayerTurn)
+            if (gameManager.isPlayerTurn)
             {
                 if (Input.GetMouseButtonDown(0) && CanMove(selectionX, selectionY))
                 {
@@ -57,27 +49,12 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void RestartGame()
+    public void ClearLineRenderers()
     {
         ClearLineRenderers(playerLineRenderers);
         ClearLineRenderers(aiLineRenderers);
-
-        ballX = 0;
-        ballY = 0;
-
-        ballTransform.position = new Vector3(0, 0, 1.0f);
-        isPlayerTurn = true;
-        isEndGame = false;
-        positionsIndex = 1;
-
-        positions = new Vector3[300];
-        positions[0] = new Vector3(ballX, ballY, 1.0f);
-
-        for (int i = 1; i < positions.Length; i++)
-        {
-            positions[i] = new Vector3(100f, 100f, 1.0f);
-        }
     }
+
 
     private void ClearLineRenderers(List<LineRenderer> lineRenderers)
     {
@@ -89,6 +66,24 @@ public class GameManager : MonoBehaviour
             }
 
             lineRenderers.Clear();
+        }
+    }
+
+    public void SetDefaultSettings()
+    {
+        ballX = 0;
+        ballY = 0;
+
+        ballTransform.position = new Vector3(0, 0, 1.0f);
+
+        positionsIndex = 1;
+
+        positions = new Vector3[300];
+        positions[0] = new Vector3(ballX, ballY, 1.0f);
+
+        for (int i = 1; i < positions.Length; i++)
+        {
+            positions[i] = new Vector3(100f, 100f, 1.0f);
         }
     }
 
@@ -229,7 +224,7 @@ public class GameManager : MonoBehaviour
 
         LineRenderer lineRenderer;
 
-        if (isPlayerTurn)
+        if (gameManager.isPlayerTurn)
         {
             lineRenderer = Instantiate(playerLineRendererPrefab);
             playerLineRenderers.Add(lineRenderer);
@@ -248,93 +243,99 @@ public class GameManager : MonoBehaviour
 
         if (ballY > 5)
         {
-            EndGame(false);
+            gameManager.EndGame(false);
         }
         else if (ballY < -5)
         {
-            EndGame(true);
+            gameManager.EndGame(true);
         }
 
         if (!CanBounce())
         {
-            EndTurn();
+            gameManager.EndTurn();
         }
         else
         {
-            var tempSelectionX = ballX + 1;
-            var tempSelectionY = ballY;
-
-            bool tempCanMove = false;
-
-            if (CanMove(tempSelectionX, tempSelectionY))
-            {
-                tempCanMove = true;
-            }
-
-            tempSelectionX = ballX - 1;
-            tempSelectionY = ballY;
-
-            if (CanMove(tempSelectionX, tempSelectionY))
-            {
-                tempCanMove = true;
-            }
-
-            tempSelectionX = ballX;
-            tempSelectionY = ballY + 1;
-
-            if (CanMove(tempSelectionX, tempSelectionY))
-            {
-                tempCanMove = true;
-            }
-
-            tempSelectionX = ballX;
-            tempSelectionY = ballY - 1;
-
-            if (CanMove(tempSelectionX, tempSelectionY))
-            {
-                tempCanMove = true;
-            }
-
-            tempSelectionX = ballX + 1;
-            tempSelectionY = ballY + 1;
-
-            if (CanMove(tempSelectionX, tempSelectionY))
-            {
-                tempCanMove = true;
-            }
-
-            tempSelectionX = ballX + 1;
-            tempSelectionY = ballY - 1;
-
-            if (CanMove(tempSelectionX, tempSelectionY))
-            {
-                tempCanMove = true;
-            }
-
-            tempSelectionX = ballX - 1;
-            tempSelectionY = ballY - 1;
-
-            if (CanMove(tempSelectionX, tempSelectionY))
-            {
-                tempCanMove = true;
-            }
-
-            tempSelectionX = ballX - 1;
-            tempSelectionY = ballY + 1;
-
-            if (CanMove(tempSelectionX, tempSelectionY))
-            {
-                tempCanMove = true;
-            }
-
-            if (!tempCanMove)
-            {
-                OnEndGameWithDrawEvent?.Invoke();
-            }
+            CheckIfGameCanEndAsDraw();
         }
 
 
         ballTransform.position = new Vector3(ballX, ballY, 1.0f);
+    }
+
+    private void CheckIfGameCanEndAsDraw()
+    {
+        var tempSelectionX = ballX + 1;
+        var tempSelectionY = ballY;
+
+        bool tempCanMove = false;
+
+        if (CanMove(tempSelectionX, tempSelectionY))
+        {
+            tempCanMove = true;
+        }
+
+        tempSelectionX = ballX - 1;
+        tempSelectionY = ballY;
+
+        if (CanMove(tempSelectionX, tempSelectionY))
+        {
+            tempCanMove = true;
+        }
+
+        tempSelectionX = ballX;
+        tempSelectionY = ballY + 1;
+
+        if (CanMove(tempSelectionX, tempSelectionY))
+        {
+            tempCanMove = true;
+        }
+
+        tempSelectionX = ballX;
+        tempSelectionY = ballY - 1;
+
+        if (CanMove(tempSelectionX, tempSelectionY))
+        {
+            tempCanMove = true;
+        }
+
+        tempSelectionX = ballX + 1;
+        tempSelectionY = ballY + 1;
+
+        if (CanMove(tempSelectionX, tempSelectionY))
+        {
+            tempCanMove = true;
+        }
+
+        tempSelectionX = ballX + 1;
+        tempSelectionY = ballY - 1;
+
+        if (CanMove(tempSelectionX, tempSelectionY))
+        {
+            tempCanMove = true;
+        }
+
+        tempSelectionX = ballX - 1;
+        tempSelectionY = ballY - 1;
+
+        if (CanMove(tempSelectionX, tempSelectionY))
+        {
+            tempCanMove = true;
+        }
+
+        tempSelectionX = ballX - 1;
+        tempSelectionY = ballY + 1;
+
+        if (CanMove(tempSelectionX, tempSelectionY))
+        {
+            tempCanMove = true;
+        }
+
+        if (!tempCanMove)
+        {
+            // end game as draw
+            gameManager.EndGame(false, true);
+        }
     }
 
     private void AITurn()
@@ -560,27 +561,6 @@ public class GameManager : MonoBehaviour
                 MakeMove(selectionX, selectionY);
                 return;
             }
-        }
-    }
-
-    private void EndTurn()
-    {
-        isPlayerTurn = !isPlayerTurn;
-
-        OnEndTurnEvent?.Invoke(isPlayerTurn);
-    }
-
-    private void EndGame(bool isPlayerWins, bool isDraw = false)
-    {
-        isEndGame = true;
-
-        if (!isDraw)
-        {
-            OnEndGameWithWinnerEvent?.Invoke(isPlayerWins);
-        }
-        else
-        {
-            OnEndGameWithDrawEvent?.Invoke();
         }
     }
 }

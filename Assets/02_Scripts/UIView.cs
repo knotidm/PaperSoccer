@@ -3,6 +3,14 @@ using UnityEngine.UI;
 
 public class UIView : MonoBehaviour
 {
+    private const string PlayerScoreText = "Player score:";
+    private const string AIScoreText = "AI score:";
+    private const string PlayerTurnText = "Turn: Player";
+    private const string AITurnText = "Turn: AI";
+    private const string PlayerWinsText = "Player wins!";
+    private const string AIWinsText = "AI wins!";
+    private const string DrawText = "Draw!";
+
     [SerializeField] private GameManager gameManager;
 
     [SerializeField] private Text turnText;
@@ -39,18 +47,18 @@ public class UIView : MonoBehaviour
 
     private void Update()
     {
-        scoreText.text = "Player score: " + GameStats.playerWinsCount + "\nAI score: " + GameStats.aiWinsCount;
+        scoreText.text = $"{PlayerScoreText} {GameStats.playerWinsCount}\n{AIScoreText} {GameStats.aiWinsCount}";
     }
 
     private void EndTurn(bool isPlayerTurn)
     {
         if (isPlayerTurn)
         {
-            turnText.text = "Turn: Player";
+            turnText.text = PlayerTurnText;
         }
         else
         {
-            turnText.text = "Turn: AI";
+            turnText.text = AITurnText;
         }
     }
 
@@ -61,19 +69,19 @@ public class UIView : MonoBehaviour
         if (isPlayerWins)
         {
             GameStats.playerWinsCount++;
-            winnerText.text = "Player wins!";
+            winnerText.text = PlayerWinsText;
         }
         else
         {
             GameStats.aiWinsCount++;
-            winnerText.text = "AI wins!";
+            winnerText.text = AIWinsText;
         }
     }
 
     private void EndGameWithDraw()
     {
         winnerText.gameObject.SetActive(true);
-        winnerText.text = "Draw!";
+        winnerText.text = DrawText;
     }
 
     private void RestartGame()
